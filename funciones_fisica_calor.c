@@ -26,6 +26,16 @@
 
 */
 
+/*
+
+git status                 (ver qué cambios hay)
+git log                    (ver versiones)
+git checkout               (cambia version / rama)
+git commit -m "comentario" (guardar cambios en staging)
+git add nombre             (agrega cambios al staging, el . agrega todo)
+git reset                  (borra el staging)
+*/
+
 #include "funciones_matrices.h"
 
 // matriz "hardcoded"
