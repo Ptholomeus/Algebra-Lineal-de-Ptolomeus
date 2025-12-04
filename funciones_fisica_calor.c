@@ -50,6 +50,7 @@ Matriz crear_matriz_coefs_1Dsteadystate (double L, int M){
 	
 }
 
+// aaaaaaaaaaaaaaaaaaa
 Matriz crear_matriz_const_1Dsteadystate (int M){
 	
 	Matriz constante;
