@@ -34,6 +34,7 @@ git checkout               (cambia version / rama)
 git commit -m "comentario" (guardar cambios en staging)
 git add nombre             (agrega cambios al staging, el . agrega todo)
 git reset                  (borra el staging)
+git branch                 (rama)
 */
 
 #include "funciones_matrices.h"
