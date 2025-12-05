@@ -27,7 +27,6 @@
 */
 
 /*
-
 git status                 (ver qué cambios hay)
 git log                    (ver versiones)
 git checkout               (cambia version / rama)

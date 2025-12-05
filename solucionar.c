@@ -9,7 +9,7 @@
 void resolver() {
 		
 	double L = 5.0;
-	int M = 12;
+	int M = 10;
 	double k = 1.0;
 	
 	// crear matriz de soluciones

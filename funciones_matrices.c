@@ -3,6 +3,28 @@
 #include <time.h>
 #include "funciones_matrices.h"
 
+/*
+	En lo breve:
+	- Verificar que los argumentos sean correctos
+	- Retornar un aviso / detalle en caso de argumento erróneo
+	- Separar en funciones "elementales" y funciones compuestas con las "elementales"
+	
+	To-Do:
+	
+	- Sumar matrices
+	- Algoritmo para triangular matrices 
+	- Abstraer vectores, casos particulares de matrices 
+	- Calcular autovalores (necesito un solver de polinomios)
+	
+	To-Do long:
+	
+	- Concatenar matrices, hacer bloques
+	- Evaluar independencia lineal
+	- Resolver sistemas indeterminados compatibles 
+	- Calcular autovectores.
+	
+*/
+
 Matriz crear_matriz(int fil, int col){
 	
 	/*
@@ -45,6 +67,7 @@ void destruir_matriz(Matriz A){
 	free(A.matriz);
 	free(A.datos);	
 	
+	return;
 }
 
 Matriz crear_submatriz (Matriz A, int fil_quitar, int col_quitar){
@@ -121,6 +144,7 @@ void imprimir_matriz (Matriz matriz) {
 	// imprimir último cero
 	printf("}\n");
 	
+	return;
 }
 
 void iniciar_matriz_cero (Matriz A) {
@@ -129,6 +153,8 @@ void iniciar_matriz_cero (Matriz A) {
 			A.matriz[i][j] = 0;
 		}			
 	}
+	
+	return;
 }
 
 void iniciar_matriz_rand (Matriz A) {
@@ -139,6 +165,8 @@ void iniciar_matriz_rand (Matriz A) {
 						   + (rand() / (double) RAND_MAX);
 		}			
 	}
+	
+	return;
 }
 
 Matriz crear_traspuesta (Matriz M){
@@ -277,6 +305,69 @@ void iniciar_matriz_identidad (Matriz M){
 	iniciar_matriz_cero(M);
 	for(int i = 0; i<M.fil; i++)
 		M.matriz[i][i] = 1;
+	
+	return;
 }
 
-//to-do: sumar, concatenar, abstraer vectores, autovalores, autovectores.
+ /*
+Matriz crear_matriz_elemental_E (){
+	
+	// crear matriz cuadrada 
+	// iniciar en identidad
+	// en fil i col j agregar k 
+	// esto equivale a reemplar F_i por F_i + k*F_j
+	
+	return //matriz 
+}
+
+Matriz crear_matriz_elemental_P(){
+	
+	crear matriz identidad
+	fila temp 
+	en fila temp guardar fila i 
+	en fila i guardar fila j 
+	en fila j guardar i 
+	
+}
+
+Matriz crear_matriz_elemental_M(){
+	
+	// la fila i se multiplica por k 
+	// crear matriz identidad 
+	// esto es, al elemento A_ii reemplazarlo por k 
+	
+}
+*/
+
+
+// En la matriz M suma k*a en la fila b
+void op_sumar_fila(Matriz *M, int a, double k, int b){
+	
+	for(int i = 0; i < M.col; i++){
+		M.matriz[b-1][i] += k * M.matriz[a-1][i];
+	}
+	
+	return;
+}
+
+// Intercambia las filas a y b
+void op_permutar_fila(Matriz *M, int a, int b){
+	
+	int len = M.col; 
+	double temp[len];
+	for(int i = 0; i < len; i++){
+		temp[i] = M.matriz[b-1][i];
+		M.matriz[b-1][i] = M.matriz[a-1][i];
+		M.matriz[a-1][i] = temp[i];
+	}
+	
+	return;
+}
+
+// Multiplica por k la fila a 
+void op_fila_multiplicar(Matriz *M, int a, double k){
+		for (int i = 0; i < M.col; i++)
+			M.matriz[a-1][i] *= k;
+		
+	return;
+}
