@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
+#include <string.h>
 #include "funciones_matrices.h"
 
 /*
@@ -24,6 +25,12 @@
 	- Calcular autovectores.
 	
 */
+
+typedef struct {
+	double **matriz;
+	double *datos;
+	int fil, col;
+} Matriz;
 
 Matriz crear_matriz(int fil, int col){
 	
@@ -50,8 +57,8 @@ Matriz crear_matriz(int fil, int col){
 		A.fil = fil;
 		A.col = col;
 		
-		A.datos  = malloc(fil * col * sizeof(double) );
-		A.matriz = malloc(fil * sizeof(double *) );
+		A.datos  = malloc( fil * col * sizeof(double) );
+		A.matriz = malloc( fil * sizeof(double *) );
 	
 		for (int idx = 0; idx < fil; idx++)
 			A.matriz[idx] = &A.datos[idx * col];
@@ -62,10 +69,13 @@ Matriz crear_matriz(int fil, int col){
 	}
 }
 
-void destruir_matriz(Matriz A){
+void destruir_matriz(Matriz *A){
 	
-	free(A.matriz);
-	free(A.datos);	
+	free((*A).matriz);
+	free((*A).datos);
+	
+	(*A).matriz = NULL;
+	(*A).datos  = NULL;
 	
 	return;
 }
@@ -208,7 +218,7 @@ double cofactor (Matriz M, int fil_cof, int col_cof){
 	temp = crear_submatriz (M, fil_cof, col_cof);
 	cof = signo * determinante_bruto(temp);
 	
-	destruir_matriz(temp);
+	destruir_matriz(&temp);
 	
 	return cof;
 	
@@ -229,7 +239,7 @@ double determinante_bruto (Matriz M){
 			signo = (j+1)%2 == 1 ? 1.0 : -1.0;
 			M_det = crear_submatriz(M, 1, j+1);
 			det += signo * M.matriz[0][j] * determinante_bruto(M_det);
-			destruir_matriz(M_det);
+			destruir_matriz(&M_det);
 		}
 		return det;
 	}
@@ -248,7 +258,7 @@ Matriz crear_adjunta (Matriz M){
 	
 	temp_2 = crear_traspuesta(temp_1);
 	
-	destruir_matriz(temp_1);
+	destruir_matriz(&temp_1);
 	
 	return temp_2;
 	
@@ -341,17 +351,18 @@ Matriz crear_matriz_elemental_M(){
 
 
 // En la matriz M suma k*a en la fila b
-void op_sumar_fila(Matriz *M, int a, double k, int b){
+// A lo bruto, no void
+Matriz op_sumar_fila(Matriz M, int a, double k, int b){
 	
 	for(int i = 0; i < M.col; i++){
 		M.matriz[b-1][i] += k * M.matriz[a-1][i];
 	}
 	
-	return;
+	return M;
 }
 
 // Intercambia las filas a y b
-void op_permutar_fila(Matriz *M, int a, int b){
+Matriz op_permutar_fila(Matriz M, int a, int b){
 	
 	int len = M.col; 
 	double temp[len];
@@ -361,13 +372,22 @@ void op_permutar_fila(Matriz *M, int a, int b){
 		M.matriz[a-1][i] = temp[i];
 	}
 	
-	return;
+	return M;
 }
 
 // Multiplica por k la fila a 
-void op_fila_multiplicar(Matriz *M, int a, double k){
+Matriz op_fila_multiplicar(Matriz M, int a, double k){
 		for (int i = 0; i < M.col; i++)
 			M.matriz[a-1][i] *= k;
 		
-	return;
+	return M;
+}
+
+Matriz crear_copia_matriz(Matriz M){
+	
+		Matriz copia = crear_matriz(M.fil, M.col);
+		
+		memcpy(copia.datos, M.datos, M.fil * M.col * sizeof(double));
+		
+	return copia;
 }

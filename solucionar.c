@@ -9,7 +9,7 @@
 void resolver() {
 		
 	double L = 5.0;
-	int M = 10;
+	int M = 9;
 	double k = 1.0;
 	
 	// crear matriz de soluciones
@@ -49,11 +49,11 @@ void resolver() {
 	exportar_solucion(solucion, "texto.csv");
 	
 	// destruirrr
-	destruir_matriz(solucion);
-	destruir_matriz(coeficientes);
-	destruir_matriz(constantes);
-	destruir_matriz(inv_coefs);
-	destruir_matriz(temp_1);
-	destruir_matriz(sol_h);
+	destruir_matriz(&solucion);
+	destruir_matriz(&coeficientes);
+	destruir_matriz(&constantes);
+	destruir_matriz(&inv_coefs);
+	destruir_matriz(&temp_1);
+	destruir_matriz(&sol_h);
 	
 }

@@ -1,11 +1,5 @@
-typedef struct {
-	double **matriz;
-	double *datos;
-	int fil, col;
-} Matriz;
-
 Matriz crear_matriz(int fil, int col);
-void destruir_matriz(Matriz A);
+void destruir_matriz(Matriz *A);
 Matriz crear_submatriz (Matriz A, int fil_quitar, int col);
 void imprimir_matriz (Matriz A);
 void iniciar_matriz_cero (Matriz A);
@@ -22,6 +16,7 @@ void iniciar_matriz_identidad (Matriz M);
 Matriz crear_matriz_elemental_E ();
 Matriz crear_matriz_elemental_P();
 Matriz crear_matriz_elemental_M();
-void op_sumar_fila();
-void op_permutar_fila();
-void op_fila_multiplicar();
+Matriz op_sumar_fila(Matriz M, int a, double k, int b);
+Matriz op_permutar_fila(Matriz M, int a, int b);
+Matriz op_fila_multiplicar(Matriz M, int a, double k);
+Matriz crear_copia_matriz(Matriz M);
