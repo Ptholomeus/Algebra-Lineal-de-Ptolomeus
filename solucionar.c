@@ -9,31 +9,60 @@
 void resolver() {
 		
 	double L = 5.0;
-	int M = 9;
+	int M;
 	double k = 1.0;
 	
-	// crear matriz de soluciones
+	printf("Introducir tamano de discretizacion. \nM = ");
+	scanf("%d", &M);
+	
+	// Defino matrices
 	Matriz solucion;
+	Matriz coeficientes;
+	Matriz inv_coefs;
+	Matriz constantes;
+	
+	Matriz test;
+	Vector_N vector;
+	
+	Matriz temp_1;
+	
+	// crear matriz de soluciones	
 	solucion = crear_matriz(M+1, 1); // vector columna
-	//iniciar_matriz_cero(solucion);
 	
 	// crear matriz de coeficientes
-	Matriz coeficientes;
 	coeficientes = crear_matriz_coefs_1Dsteadystate(L, M);
 	
+	// conseguir inversa de la matriz de coeficientes
+	inv_coefs = crear_inversa(&coeficientes);
+	
 	// crear matriz constante
-	Matriz constantes;
 	constantes = crear_matriz_const_1Dsteadystate(M);
 	
 	// solucionar
 	imprimir_matriz(coeficientes);
 	imprimir_matriz(constantes);
 	
-	// conseguir inversa de la matriz de coeficientes
-	Matriz inv_coefs = crear_inversa(coeficientes);
+
+	/*
+	//imprimir y probar la inversa
+	test = copiar_matriz(coeficientes);
+	
+	printf("Triangular coefs: \n");
+	triangular_matriz(&test, &vector);
+	imprimir_matriz(test);
+	
+	printf("Inversa\n");
+	imprimir_matriz(inv_coefs);
+	
+	printf("Inversa de coeficientes: \n");
+	imprimir_matriz(inv_coefs);
+	
+	printf("Producto de coeficientes e inversa: \n");
+	test = crear_mult_matriz(inv_coefs, coeficientes);
+	imprimir_matriz(test);
+	*/
 	
 	// crear matriz temporal, que almacena (1/k)*A^-1
-	Matriz temp_1;
 	temp_1 = crear_matriz(coeficientes.fil, coeficientes.col);
 	temp_1 = escalar_mult_matriz( (1/k) , inv_coefs );
 	
@@ -55,5 +84,7 @@ void resolver() {
 	destruir_matriz(&inv_coefs);
 	destruir_matriz(&temp_1);
 	destruir_matriz(&sol_h);
+	destruir_matriz(&test);
+	free(vector.vector);
 	
 }

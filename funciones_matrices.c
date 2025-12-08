@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <time.h>
 #include <string.h>
+#include <math.h>
+#include <stddef.h>
 #include "funciones_matrices.h"
 
 /*
@@ -13,7 +15,7 @@
 	To-Do:
 	
 	- Sumar matrices
-	- Algoritmo para triangular matrices 
+	+ Algoritmo para triangular matrices (LISTO)
 	- Abstraer vectores, casos particulares de matrices 
 	- Calcular autovalores (necesito un solver de polinomios)
 	
@@ -25,12 +27,6 @@
 	- Calcular autovectores.
 	
 */
-
-typedef struct {
-	double **matriz;
-	double *datos;
-	int fil, col;
-} Matriz;
 
 Matriz crear_matriz(int fil, int col){
 	
@@ -52,6 +48,7 @@ Matriz crear_matriz(int fil, int col){
 		A.col = 0;
 		
 		return A;
+		
 	} else {
 		
 		A.fil = fil;
@@ -77,6 +74,9 @@ void destruir_matriz(Matriz *A){
 	(*A).matriz = NULL;
 	(*A).datos  = NULL;
 	
+	(*A).fil = 0;
+	(*A).fil = 0;
+	
 	return;
 }
 
@@ -98,10 +98,7 @@ Matriz crear_submatriz (Matriz A, int fil_quitar, int col_quitar){
 		
 		// inicializar matriz menor 
 		
-		A_menor.fil = A.fil-1;
-		A_menor.col = A.col-1;
-		
-		A_menor = crear_matriz(A_menor.fil, A_menor.col);
+		A_menor = crear_matriz(A.fil-1, A.col-1);
 	
 		for (int i_A = 0, i_menor = 0; i_A < A.fil; i_A++){
 		
@@ -125,6 +122,7 @@ Matriz crear_submatriz (Matriz A, int fil_quitar, int col_quitar){
 
 }
 
+// probar de hacerla con punteros 
 void imprimir_matriz (Matriz matriz) {
 	
 	double **A = matriz.matriz;
@@ -160,7 +158,7 @@ void imprimir_matriz (Matriz matriz) {
 void iniciar_matriz_cero (Matriz A) {
 	for (int i = 0; i < A.fil; i++){
 		for (int j = 0; j < A.col; j++){
-			A.matriz[i][j] = 0;
+			A.matriz[i][j] = (double) 0;
 		}			
 	}
 	
@@ -216,7 +214,7 @@ double cofactor (Matriz M, int fil_cof, int col_cof){
 	signo = (fil_cof + col_cof) % 2 == 0 ? 1.0 : -1.0;
 	
 	temp = crear_submatriz (M, fil_cof, col_cof);
-	cof = signo * determinante_bruto(temp);
+	cof = signo * determinante_2(&temp);
 	
 	destruir_matriz(&temp);
 	
@@ -264,18 +262,18 @@ Matriz crear_adjunta (Matriz M){
 	
 }
 
-Matriz crear_inversa (Matriz M){
+Matriz crear_inversa (Matriz *M){
 	
 	Matriz temp;
 	
 	double det;
 	
 	// verificar que no sea cero
-	det = determinante_bruto (M);
+	det = determinante_2 (M);
 	
-	temp = crear_adjunta(M);
+	temp = crear_adjunta(*M);
 	
-	temp = escalar_mult_matriz ( 1 / det, temp );
+	temp = escalar_mult_matriz ( (double) 1 / det, temp );
 	
 	return temp;
 	
@@ -314,7 +312,7 @@ void iniciar_matriz_identidad (Matriz M){
 	//comprobar que M es cuadrada
 	iniciar_matriz_cero(M);
 	for(int i = 0; i<M.fil; i++)
-		M.matriz[i][i] = 1;
+		M.matriz[i][i] = (double) 1;
 	
 	return;
 }
@@ -352,42 +350,198 @@ Matriz crear_matriz_elemental_M(){
 
 // En la matriz M suma k*a en la fila b
 // A lo bruto, no void
-Matriz op_sumar_fila(Matriz M, int a, double k, int b){
+void op_sumar_fila(Matriz *M, int a, double k, int b){
 	
-	for(int i = 0; i < M.col; i++){
-		M.matriz[b-1][i] += k * M.matriz[a-1][i];
+	for(int i = 0; i < M->col; i++){
+		M->matriz[b-1][i] += k * M->matriz[a-1][i];
 	}
 	
-	return M;
+	return;
 }
 
 // Intercambia las filas a y b
-Matriz op_permutar_fila(Matriz M, int a, int b){
+void op_permutar_fila(Matriz *M, int a, int b){
 	
-	int len = M.col; 
-	double temp[len];
-	for(int i = 0; i < len; i++){
-		temp[i] = M.matriz[b-1][i];
-		M.matriz[b-1][i] = M.matriz[a-1][i];
-		M.matriz[a-1][i] = temp[i];
-	}
+	double *temp; 
 	
-	return M;
+	temp = M->matriz[a-1];
+	M->matriz[a-1] = M->matriz[b-1];
+	M->matriz[b-1] = temp;
+	
+	return;
 }
 
 // Multiplica por k la fila a 
-Matriz op_fila_multiplicar(Matriz M, int a, double k){
-		for (int i = 0; i < M.col; i++)
-			M.matriz[a-1][i] *= k;
+void op_fila_multiplicar(Matriz *M, int a, double k){
+		for (int i = 0; i < M->col; i++)
+			M->matriz[a-1][i] *= k;
 		
-	return M;
+	return;
 }
 
-Matriz crear_copia_matriz(Matriz M){
+void op_normalizar_fila(Matriz *M, int a, int b){
 	
+	double coef = M->matriz[a-1][b-1];
+	coef = 1.0 / coef;
+	
+	op_fila_multiplicar(M, a, coef);
+}
+
+Matriz copiar_matriz(Matriz M){
+		
+		// chequear que las dimensiones den
+		
 		Matriz copia = crear_matriz(M.fil, M.col);
 		
 		memcpy(copia.datos, M.datos, M.fil * M.col * sizeof(double));
 		
 	return copia;
+}
+
+/*
+	1_ Ver elemento a = M[i][j] (empezar con i = j = 1);
+	2_ Verificar si es distinto de cero o no.
+		2.1_ Es igual a 0
+		2.2_ Si la fila no es la última, buscar el primer elemento 
+		distinto de cero de la misma columna, en las filas inferiores.
+			2.2.1_ Si no hay distinto de cero, continuar en paso 5.
+		2.3_ Conseguido el índice, permutarlas.
+		2.4_ Continuar con el paso 3.
+	3_ Es != 0, entonces normalizar fila.
+	4_ Si no es la última, por cada fila inferior j, tomar el elemento b = M[x][i]
+		4.1_ A esa fila inferior j, restarle la fila i multiplicada por b
+		4.2_ Repetir hasta la última fila 
+	5_ Si no es la última, avanzar a la siguiente fila 
+		5.1_ Si es la última fila, terminar programa.
+	
+	
+*/
+void triangular_matriz (Matriz *M, Vector_N *cambios){
+	
+	int fil_max = M->fil;
+	int col_max = M->col;
+	
+	int fil_idx, col_idx; // 1-based
+	int i, j;
+	
+	bool coef_es_cero = false;
+	
+	double epsilon = 0.00001;
+	double aux = 0; // auxiliar
+	
+	// Este bucle explora cada fil. fil_idx es el índice de la fila.
+	// Paso 1
+	fil_idx = 1;
+	col_idx = 1;
+	while(fil_idx <= fil_max && col_idx <= col_max){
+		
+		// Paso 2
+		if( fabs(M->matriz[fil_idx-1][col_idx-1]) < epsilon){
+			
+			coef_es_cero = true;
+			
+			// Paso 2.2, busco debajo el primer no nulo debajo
+			i = fil_idx;
+			while(coef_es_cero == true && i <= fil_max){
+				// Paso 2.3 Hallado el primer no nulo, permuto
+				if(fabs(M->matriz[i-1][col_idx-1]) > epsilon){
+					op_permutar_fila(M, fil_idx, i);
+					registrar_op_elemental(cambios, -1.0);
+					coef_es_cero = false; // sale del bucle y del bloque
+				}
+				i++;
+			}
+			// Paso 2.2.1, No hay elemento debajo del coef que sea no nulo, avanzo de fila
+			if (coef_es_cero == true){
+				col_idx++;
+				continue;
+			}
+		}
+		
+		// Paso 3, elemento distinto de cero, normalizar la fila
+		aux = M->matriz[fil_idx-1][col_idx-1]; // Registro antes de cambiar
+		op_normalizar_fila(M, fil_idx, col_idx);
+		registrar_op_elemental(cambios, aux);
+		
+		
+		// Paso 4, eliminar coeficientes en misma columna para cada fila debajo
+		if (fil_idx < fil_max){
+			for(i = fil_idx+1; i <= fil_max; i++){
+				op_sumar_fila(M, fil_idx, (-1.0)*M->matriz[i-1][col_idx-1], i);
+				registrar_op_elemental(cambios, 1.0);
+			}
+		}
+		
+		// Paso 5, Avanzo a la siguiente fila
+		fil_idx++;
+		col_idx++;
+	}
+	
+	return;
+}
+
+void registrar_op_elemental(Vector_N *cambios, double valor){
+	// Aumento el tamaño
+	size_t len_nueva = cambios->len + 1;
+	
+	double *temp = realloc(cambios->vector, len_nueva*sizeof(double));
+	
+	if (temp == NULL) 
+		return;
+	
+	cambios->vector = temp;
+	cambios->vector[len_nueva-1] = valor;
+	cambios->len = len_nueva;
+	
+	return;
+	
+}
+
+void imprimir_vector_N(Vector_N *vector){
+	
+	int len = vector->len;
+	
+	if(len == 0){
+		printf("No es un vector. \n");
+		return;
+	}	
+	
+	printf("( ");
+	for (int i = 0; i < len-1; i++){
+		printf("%8.4f, ", vector->vector[i]);
+	}
+	printf("%8.4f)\n",vector->vector[len-1]);
+	
+	return;
+	
+}
+
+// verificar que sea cuadrada
+double determinante_2(Matriz *M){
+	
+	Vector_N operaciones = {NULL, 0};
+	Matriz M_copia = crear_matriz(M->fil, M->col);
+	M_copia = copiar_matriz(*M);
+	
+	triangular_matriz (&M_copia, &operaciones);
+	
+	int len = operaciones.len;
+	double det = (double) 1;
+	for(int i = 0; i < len; i++){
+		det *= operaciones.vector[i];
+	}
+	
+	// CORRECCIÓN DE GEMINI:::::
+	// CRÍTICO: Multiplicar por la diagonal resultante de la matriz triangular
+	for(int i = 0; i < M_copia.fil; i++){
+	det *= M_copia.matriz[i][i]; 
+	}
+	// Si la matriz era singular, algún elemento diagonal 
+	// será 0, haciendo det = 0 correctamente.
+
+	free(operaciones.vector);
+	destruir_matriz(&M_copia);
+	
+	return det;
+	
 }

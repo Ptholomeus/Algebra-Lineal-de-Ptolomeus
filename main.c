@@ -6,9 +6,9 @@ git log                    (ver versiones)
 git checkout               (cambia version / rama)
 git commit -m "comentario" (guardar cambios en staging)
 git commit --ammend        (permite modificar un commit)
-git add nombre             (agrega cambios al staging, el . agrega todo)
+git add file_name          (agrega cambios al staging, el . agrega todo)
 git reset                  (borra el staging)
-git branch                 (rama)
+git branch branch_name     (rama)
 */
 
 #include <stdlib.h>

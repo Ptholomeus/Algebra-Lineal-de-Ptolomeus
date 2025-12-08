@@ -5,8 +5,8 @@
 
 void test_matrices(){
 		
-	int fil = 3;
-	int col = 3;
+	int fil = 6;
+	int col = 6;
 	
 	// Creo una matriz para probar
 	Matriz M;
@@ -25,7 +25,10 @@ void test_matrices(){
 	imprimir_matriz(M_menor);
 	
 	// pruebo el determinante 
-	double det = determinante_bruto(M_menor);
+	//double det = determinante_2(&M_menor);
+	
+	double det = determinante_2(&M);
+	
 	printf(" El determinante es %f.\n", det);
 	
 	
@@ -35,7 +38,7 @@ void test_matrices(){
 	M_inv.fil = fil;
 	M_inv.col = col;
 	
-	M_inv = crear_inversa(M);
+	M_inv = crear_inversa(&M);
 	
 	imprimir_matriz(M_inv);
 	
@@ -71,6 +74,7 @@ void test_matrices_1(){
 	imprimir_matriz(M);
 }
 
+// Para probar operaciones elementales por filas 
 void test_matrices_2(){
 	
 	/*
@@ -79,8 +83,13 @@ void test_matrices_2(){
 		- Mostrar ambas
 	*/
 	
-	int fil = 4;
-	int col = 4;
+	int fil;
+	int col;
+	
+	system("cls"); // A Brian y a Dennis no les gusta.
+	printf("Ingrese dimensiones \"m n\" de matriz m x n.\n");
+	scanf("%d %d", &fil, &col);
+	
 	
 	// Creo una matriz para probar
 	Matriz M, M_copia;
@@ -90,12 +99,19 @@ void test_matrices_2(){
 	M = crear_matriz(M.fil, M.col);
 	iniciar_matriz_rand(M);
 	
-	M_copia = crear_copia_matriz(M);
+	M_copia = copiar_matriz(M);
 		
 	// hacer operaciones por fila
 	int opt;
 	int a, b;
 	double k;
+	
+	// Para eliminación Gaussiana
+	Vector_N operaciones = {NULL, 0};
+	
+	// Para test de inversas 
+	Matriz M_inversa, test;
+	
 	
 	bool salir = false;
 	while(!salir){
@@ -103,12 +119,17 @@ void test_matrices_2(){
 		system("cls"); // A Brian y a Dennis no les gusta.
 		// elegir operación
 		
+		printf("Matriz %d x %d \n\n", fil, col);
 		imprimir_matriz(M);
 		imprimir_matriz(M_copia);
+		printf("\n");
 		
-		printf("1 Fila a por k en fila b \n");
-		printf("2 Permutar a y b \n");
-		printf("3 Fila a por k \n");
+		printf("1 Fil_a x k -> Fil_b \n");
+		printf("2 Permutar Fil_a <-> Fil_b \n");
+		printf("3 Fil_a x k -> a \n");
+		printf("4 Normalizar Fil_a \n");
+		printf("5 Eliminacion Gaussiana\n");
+		printf("6 Test de inversa\n");
 		printf("0 Salir \n");
 		
 		printf("Elegir: \n");
@@ -117,29 +138,56 @@ void test_matrices_2(){
 		
 		switch (opt){
 			case 1:
-				printf("a k b, a*k -> b: \n");
+				printf("a k b : a*k -> b \n");
 				fflush(stdout);
 				scanf("%d %lf %d", &a, &k, &b);
-				M_copia = op_sumar_fila(M_copia, a, k, b);
+				op_sumar_fila(&M_copia, a, k, b);
 				imprimir_matriz(M_copia);
 				break;
 			
 			case 2:
-				printf("a <-> b: \n");
+				printf("a b : a <-> b \n");
 				fflush(stdout);
 				scanf("%d %d", &a, &b);
-				M_copia = op_permutar_fila(M_copia, a, b);
+				op_permutar_fila(&M_copia, a, b);
 				imprimir_matriz(M_copia);
 				break;
 			
 			case 3:
-				printf("a*k a: \n");
+				printf("a k : a*k -> a \n");
 				fflush(stdout);
 				scanf("%d %lf", &a, &k);
-				M_copia = op_fila_multiplicar(M_copia, a, k);
+				op_fila_multiplicar(&M_copia, a, k);
 				imprimir_matriz(M_copia);
 				break;
+			
+			case 4:
+				printf("a b: a* 1/M[a][b] -> a \n");
+				fflush(stdout);
+				scanf("%d %d", &a, &b);
+				op_normalizar_fila(&M_copia, a, b);
+				imprimir_matriz(M_copia);
+				break;
+			
+			case 5 :
+				fflush(stdout);
+				triangular_matriz (&M_copia, &operaciones);
+				imprimir_matriz(M_copia);
+				imprimir_vector_N(&operaciones);
+				free(operaciones.vector);
+				break;
 				
+			case 6 :
+				fflush(stdout);
+				M_inversa = crear_inversa(&M);
+				test = crear_mult_matriz(M, M_inversa);
+				printf("La inversa es: \n");
+				imprimir_matriz(M_inversa);
+				printf("M * M^-1: \n");
+				imprimir_matriz(test);				
+				
+				break;
+			
 			case 0:
 				salir = true;
 				break;
@@ -153,8 +201,11 @@ void test_matrices_2(){
 		getchar();
 		getchar();
 		
+		
 	}
 	
+	destruir_matriz(&M_inversa);
+	destruir_matriz(&test);
 	destruir_matriz(&M);
 	destruir_matriz(&M_copia);
 	

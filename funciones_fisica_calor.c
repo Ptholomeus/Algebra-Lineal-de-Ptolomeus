@@ -26,17 +26,6 @@
 
 */
 
-/*
-git status                 (ver qué cambios hay)
-git log                    (ver versiones)
-git checkout               (cambia version / rama)
-git commit -m "comentario" (guardar cambios en staging)
-git commit --ammend        (permite modificar un commit)
-git add nombre             (agrega cambios al staging, el . agrega todo)
-git reset                  (borra el staging)
-git branch                 (rama)
-*/
-
 #include "funciones_matrices.h"
 
 // matriz "hardcoded"
@@ -46,15 +35,16 @@ Matriz crear_matriz_coefs_1Dsteadystate (double L, int M){
 	
 	Matriz coefs;
 	coefs = crear_matriz(M+1, M+1);
-	//iniciar_matriz_cero (coefs);
 	
-	coefs.matriz[0][0] = 1;
-	coefs.matriz[M][M] = 1;
+	//Inicializar matriz
+	
+	coefs.matriz[0][0] = 1.0;
+	coefs.matriz[M][M] = 1.0;
 	
 	for (int i = 1; i < M; i++){
-		coefs.matriz[i][i-1] =  1;
-		coefs.matriz[i][i+0] = -2;
-		coefs.matriz[i][i+1] =  1;
+		coefs.matriz[i][i-1] =  1.0;
+		coefs.matriz[i][i+0] = -2.0;
+		coefs.matriz[i][i+1] =  1.0;
 	}
 		
 	return coefs;
@@ -68,8 +58,8 @@ Matriz crear_matriz_const_1Dsteadystate (int M){
 	constante = crear_matriz(M+1, 1);
 	//iniciar_matriz_cero (constante);
 	
-	constante.matriz[0][0] = 300; // T_0
-	constante.matriz[M][0] = 400; // T_M
+	constante.matriz[0][0] = 300.0; // T_0
+	constante.matriz[M][0] = 400.0; // T_M
 	
 	return constante;
 	
