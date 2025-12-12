@@ -77,6 +77,9 @@ void resolver() {
 	
 	exportar_solucion(solucion, "texto.csv");
 	
+	getchar();
+	getchar();
+	
 	// destruirrr
 	destruir_matriz(&solucion);
 	destruir_matriz(&coeficientes);
@@ -86,5 +89,7 @@ void resolver() {
 	destruir_matriz(&sol_h);
 	destruir_matriz(&test);
 	free(vector.vector);
+	
+	return;
 	
 }
