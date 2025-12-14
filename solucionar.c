@@ -33,15 +33,17 @@ void resolver() {
 	// crear matriz de coeficientes
 	coeficientes = crear_matriz_coefs_1Dsteadystate(L, M);
 	
+	/*
 	// conseguir inversa de la matriz de coeficientes
 	inv_coefs = crear_inversa(&coeficientes);
+	*/
 	
 	// crear matriz constante
 	constantes = crear_matriz_const_1Dsteadystate(M);
 	
 	// solucionar
-	imprimir_matriz(coeficientes);
-	imprimir_matriz(constantes);
+	//imprimir_matriz(coeficientes);
+	//imprimir_matriz(constantes);
 	
 
 	/*
@@ -63,20 +65,29 @@ void resolver() {
 	imprimir_matriz(test);
 	*/
 	
+	/*
 	// crear matriz temporal, que almacena (1/k)*A^-1
 	// 13.12.25 Acá también podría haber problema, por eso cambio la def de esc mult matr
 	temp_1 = crear_escalar_mult_matriz( (1/k) , inv_coefs );
+	*/
 	
+	/*
 	// solucion es (1/k)*A^-1*b
 	solucion = crear_mult_matriz(temp_1, constantes);
+	
+	*/
+	
+	temp_1 = crear_escalar_mult_matriz( (1/k) , constantes);
+	resolver_sistema(&solucion, &coeficientes, &temp_1);
 	
 	// solucion horizontal
 	Matriz sol_h;
 	sol_h = crear_traspuesta(solucion);
 	
-	imprimir_matriz(sol_h);
+	//imprimir_matriz(sol_h);
 	
 	exportar_solucion(solucion, "texto.csv");
+	printf("\nListo!");
 	
 	getchar();
 	getchar();
@@ -85,7 +96,7 @@ void resolver() {
 	destruir_matriz(&solucion);
 	destruir_matriz(&coeficientes);
 	destruir_matriz(&constantes);
-	destruir_matriz(&inv_coefs);
+	// destruir_matriz(&inv_coefs);
 	destruir_matriz(&temp_1);
 	destruir_matriz(&sol_h);
 	// destruir_matriz(&test);

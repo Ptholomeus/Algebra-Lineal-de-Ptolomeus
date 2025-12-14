@@ -8,16 +8,14 @@
 
 /*
 	En lo breve:
-	- Verificar que los argumentos sean correctos
 	- Retornar un aviso / detalle en caso de argumento erróneo
 	- Separar en funciones "elementales" y funciones compuestas con las "elementales"
 	
 	To-Do:
 	
-	- Sumar matrices
-	+ Algoritmo para triangular matrices (LISTO)
-	- Triangulación Gaussiana
-	- Matrices L y U
+	- Verificar que los argumentos sean correctos
+	- Forward y backward substitution
+	- Pasar argumentos como punteros en lo que haga falta
 	- Calcular autovalores (necesito un solver de polinomios)
 	
 	To-Do long:
@@ -28,7 +26,16 @@
 	- Calcular autovectores.
 	- Algoritmo de Thomas y de Cholesky
 	
+	Hecho:
+	
+	+ Sumar matrices
+	+ Algoritmo para triangular matrices (LISTO)
+	+ Triangulación Gaussiana
+	+ Matrices L y U
+	
 */
+
+double epsilon = 0.00001;
 
 Matriz crear_matriz(int fil, int col){
 	
@@ -141,12 +148,12 @@ void imprimir_matriz (Matriz matriz) {
 		// por cada fila, dejar un tab
 		printf("\t { ");
 		for (int j = 0; j < col-1; j++){
-			if (A[i][j] < 0.00001)
+			if (fabs(A[i][j]) < epsilon / 10)
 				printf("%8.4f, ", 0.0);
 			else
 				printf("%8.4f, ", A[i][j]); // imprimir hasta el anteultimo elemento
 		}
-		if (A[i][col-1] < 0.00001)
+		if (fabs(A[i][col-1]) < epsilon / 10)
 			printf("%8.4f }, \n", 0.0);
 		else
 			printf("%8.4f }, \n", A[i][col-1]); // el ultimo elemento se formatea asi
@@ -155,12 +162,12 @@ void imprimir_matriz (Matriz matriz) {
 	// imprimir ultima fila 
 	printf("\t { ");
 	for (int j = 0; j < col-1; j++){
-		if (A[fil-1][j] < 0.00001)
+		if (fabs(A[fil-1][j]) < epsilon / 10)
 			printf("%8.4f, ", 0.0);
 		else
 			printf("%8.4f, ", A[fil-1][j]);
 	}
-	if (A[fil-1][col-1] < 0.00001)
+	if (fabs(A[fil-1][col-1]) < epsilon / 10)
 		printf("%8.4f }\n", 0.0);
 	else
 		printf("%8.4f }\n", A[fil-1][col-1]); // imprimir sin coma
@@ -183,11 +190,26 @@ void iniciar_matriz_cero (Matriz *A) {
 }
 
 void iniciar_matriz_rand (Matriz A) {
+	
 	srand(time(NULL));
+	
 	for (int i = 0; i < A.fil; i++){
 		for (int j = 0; j < A.col; j++){
 			A.matriz[i][j] = (rand() % (9 + 1)) 
 						   + (rand() / (double) RAND_MAX);
+		}			
+	}
+	
+	return;
+}
+
+void iniciar_matriz_rand_int(Matriz *A){
+	
+	srand(time(NULL));
+	
+	for (int i = 0; i < A->fil; i++){
+		for (int j = 0; j < A->col; j++){
+			A->matriz[i][j] = (rand() % (9 + 1));
 		}			
 	}
 	
@@ -485,7 +507,7 @@ void triangular_matriz (Matriz *M, Vector_N *cambios){
 	
 	bool coef_es_cero = false;
 	
-	double epsilon = 0.00001;
+	// double epsilon = 0.00001;
 	double aux = 0; // auxiliar
 	
 	// Este bucle explora cada fil. fil_idx es el índice de la fila.
@@ -670,14 +692,14 @@ void obtener_P_L_U (Matriz *M, Matriz *P, Matriz *L, Matriz *U){
 				
 				// Paso 2.3 Hallado el primer no nulo, permuto luego registro.
 				if(fabs(U->matriz[i-1][col_idx-1]) > epsilon){
+					coef_es_cero = false; // sale del bucle y del bloque
 					// Paso 2.4 registro P
-					op_permutar_col(P, fil_idx, i); // Se aplica primero la última permutación, luego la primera.
+					op_permutar_fil(P, fil_idx, i); // Se aplica primero la última permutación, luego la primera.
 													// Esto es, P_1···P_n-1 P_n, o lo que es lo mismo, permutar por
 													// derecha, o permutar columnas.
 					// Paso 2.5 registro L
 					op_permutar_fil_L(L, fil_idx, i); // Permuto las filas, sólo bajo la diagonal.
 					op_permutar_fil(U, fil_idx, i);
-					coef_es_cero = false; // sale del bucle y del bloque
 				}
 				i++;
 				
@@ -754,4 +776,79 @@ double determinante_2(Matriz *M){
 	
 	return det;
 	
+}
+
+Matriz crear_fwd_subs(Matriz *L, Matriz *Pb){
+	
+	Matriz y = crear_matriz(Pb->fil, 1);
+	
+	y.matriz[0][0] = (1 / L->matriz[0][0]) * Pb->matriz[0][0];
+	for (int i = 1; i < Pb->fil; i++){
+		y.matriz[i][0] = Pb->matriz[i][0];
+		for(int j = 0; j < i; j++)
+			y.matriz[i][0] -= L->matriz[i][j] * y.matriz[j][0]; 
+	}
+	return y;
+	
+}
+
+// Solo si U es cuadrada e invertible
+// Ver bien los argumentos
+Matriz crear_bwd_subs(Matriz *U, Matriz *y){
+	
+	Matriz x = crear_matriz(y->fil, 1);
+	
+	x.matriz[x.fil-1][0] = (1 / U->matriz[x.fil-1][x.fil-1]) * y->matriz[x.fil-1][0];
+	for (int i = x.fil-2; i >= 0; i--){
+		x.matriz[i][0] = y->matriz[i][0];
+		for(int j = x.fil-1; j > i; j--)
+			x.matriz[i][0] -= U->matriz[i][j] * x.matriz[j][0]; 
+		x.matriz[i][0] *= (1 / U->matriz[i][i]);
+	}
+	
+	return x;
+}
+
+// A + B = C, opera así porque me parece peligroso que una operación así de 
+// frecuente (¿?) reserve memoria cada vez que aparece. Debería hacer lo mismo
+// con la multiplicación.
+
+// Revisar que se cumplan las condiciones
+void suma_matrices (Matriz *A, Matriz *B, Matriz *C){
+	
+	for (int i = 0; i < C->fil; i++){
+		for (int j = 0; j < C->col; j++)
+			C->matriz[i][j] = A->matriz[i][j] + B->matriz[i][j];
+	}
+	
+	return;
+}
+
+void resta_matrices (Matriz *A, Matriz *B, Matriz *C){
+	
+	for (int i = 0; i < C->fil; i++){
+		for (int j = 0; j < C->col; j++)
+			C->matriz[i][j] = A->matriz[i][j] - B->matriz[i][j];
+	}
+	
+	return;
+}
+
+void resolver_sistema(Matriz *x, Matriz *A, Matriz *b){
+	
+	Matriz P, L, U, y, Pb;
+	
+	obtener_P_L_U(A, &P, &L, &U);
+	Pb = crear_mult_matriz(P, *b);
+	
+	y = crear_fwd_subs(&L, &Pb);
+	*x = crear_bwd_subs(&U, &y);
+	
+	destruir_matriz(&P);
+	destruir_matriz(&L);
+	destruir_matriz(&U);
+	destruir_matriz(&Pb);
+	destruir_matriz(&y);
+	
+	return;
 }

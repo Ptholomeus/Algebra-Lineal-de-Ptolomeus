@@ -95,7 +95,7 @@ void test_matrices_2(){
 	M.col = col;	
 
 	M = crear_matriz(M.fil, M.col);
-	iniciar_matriz_rand(M);
+	iniciar_matriz_rand_int(&M);
 	
 	M_copia = copiar_matriz(M);
 		
@@ -255,8 +255,8 @@ void test_matrices_2(){
 				
 				obtener_P_L_U (&M, &P, &L, &U);
 				
-				test_1 = crear_mult_matriz(P, L);
-				test_2 = crear_mult_matriz(test_1, U);
+				test_1 = crear_mult_matriz(L, U);
+				test_2 = crear_mult_matriz(P, test_1);
 				
 				printf("\n");				
 				printf("La matriz P es: \n");
@@ -269,6 +269,10 @@ void test_matrices_2(){
 				printf("\n");
 				printf("La matriz U es: \n");
 				imprimir_matriz(U);
+				
+				printf("\n");
+				printf("La matriz LU es: \n");
+				imprimir_matriz(test_1);
 				
 				printf("\n");
 				printf("La matriz PLU es: \n");
