@@ -16,7 +16,8 @@
 	
 	- Sumar matrices
 	+ Algoritmo para triangular matrices (LISTO)
-	- Abstraer vectores, casos particulares de matrices 
+	- Triangulación Gaussiana
+	- Matrices L y U
 	- Calcular autovalores (necesito un solver de polinomios)
 	
 	To-Do long:
@@ -25,6 +26,7 @@
 	- Evaluar independencia lineal
 	- Resolver sistemas indeterminados compatibles 
 	- Calcular autovectores.
+	- Algoritmo de Thomas y de Cholesky
 	
 */
 
@@ -54,13 +56,14 @@ Matriz crear_matriz(int fil, int col){
 		A.fil = fil;
 		A.col = col;
 		
+		// Por qué no usar calloc?
 		A.datos  = malloc( fil * col * sizeof(double) );
 		A.matriz = malloc( fil * sizeof(double *) );
 	
 		for (int idx = 0; idx < fil; idx++)
 			A.matriz[idx] = &A.datos[idx * col];
 		
-		iniciar_matriz_cero (A);
+		iniciar_matriz_cero (&A);
 		
 		return A;
 	}
@@ -123,6 +126,7 @@ Matriz crear_submatriz (Matriz A, int fil_quitar, int col_quitar){
 }
 
 // probar de hacerla con punteros 
+// 13.12.25 Ahora no existe -0.0000 al imprimir
 void imprimir_matriz (Matriz matriz) {
 	
 	double **A = matriz.matriz;
@@ -137,17 +141,29 @@ void imprimir_matriz (Matriz matriz) {
 		// por cada fila, dejar un tab
 		printf("\t { ");
 		for (int j = 0; j < col-1; j++){
-			printf("%8.4f, ", A[i][j]); // imprimir hasta el anteultimo elemento
+			if (A[i][j] < 0.00001)
+				printf("%8.4f, ", 0.0);
+			else
+				printf("%8.4f, ", A[i][j]); // imprimir hasta el anteultimo elemento
 		}
-		printf("%8.4f }, \n", A[i][col-1]); // el ultimo elemento se formatea asi
+		if (A[i][col-1] < 0.00001)
+			printf("%8.4f }, \n", 0.0);
+		else
+			printf("%8.4f }, \n", A[i][col-1]); // el ultimo elemento se formatea asi
 		
 	}
 	// imprimir ultima fila 
 	printf("\t { ");
 	for (int j = 0; j < col-1; j++){
+		if (A[fil-1][j] < 0.00001)
+			printf("%8.4f, ", 0.0);
+		else
 			printf("%8.4f, ", A[fil-1][j]);
 	}
-	printf("%8.4f }\n", A[fil-1][col-1]); // imprimir sin coma
+	if (A[fil-1][col-1] < 0.00001)
+		printf("%8.4f }\n", 0.0);
+	else
+		printf("%8.4f }\n", A[fil-1][col-1]); // imprimir sin coma
 	
 	// imprimir último cero
 	printf("}\n");
@@ -155,11 +171,12 @@ void imprimir_matriz (Matriz matriz) {
 	return;
 }
 
-void iniciar_matriz_cero (Matriz A) {
-	for (int i = 0; i < A.fil; i++){
-		for (int j = 0; j < A.col; j++){
-			A.matriz[i][j] = (double) 0;
-		}			
+// Gemini recomienda usar memset
+// 14.12.25 cambié de doble bucle a un solo bucle, tambien el argumento.
+void iniciar_matriz_cero (Matriz *A) {
+	
+	for (int i = 0; i < A->fil * A->col; i++){
+		A->datos[i] = (double) 0;
 	}
 	
 	return;
@@ -193,15 +210,19 @@ Matriz crear_traspuesta (Matriz M){
 }
 
 // no crea, solo retorna matriz
-Matriz escalar_mult_matriz (double a, Matriz M) {
+
+// 13.12.25 la modifiqué para que sea creadora
+Matriz crear_escalar_mult_matriz (double a, Matriz M) {
+	
+	Matriz temp = crear_matriz(M.fil, M.col);
 	
 	for (int i = 0; i < M.fil; i++){
 		for (int j = 0; j < M.col; j++){
-			M.matriz[i][j] = a * M.matriz[i][j];
+			temp.matriz[i][j] = a * M.matriz[i][j];
 		}
 	}
 	
-	return M;
+	return temp;
 	
 }
 
@@ -243,6 +264,7 @@ double determinante_bruto (Matriz M){
 	}
 }
 
+// 13.12.25 Podría haber problema en temp_1 pero no lo entiendo bien.
 Matriz crear_adjunta (Matriz M){
 	
 	Matriz temp_1, temp_2;
@@ -262,6 +284,7 @@ Matriz crear_adjunta (Matriz M){
 	
 }
 
+// Acá también podría haber problema. Cuándo libero temp?
 Matriz crear_inversa (Matriz *M){
 	
 	Matriz temp;
@@ -273,7 +296,7 @@ Matriz crear_inversa (Matriz *M){
 	
 	temp = crear_adjunta(*M);
 	
-	temp = escalar_mult_matriz ( (double) 1 / det, temp );
+	temp = crear_escalar_mult_matriz ( (double) 1 / det, temp );
 	
 	return temp;
 	
@@ -307,12 +330,12 @@ Matriz crear_mult_matriz (Matriz A, Matriz B){
 	
 }
 
-void iniciar_matriz_identidad (Matriz M){
+void iniciar_matriz_identidad (Matriz *M){
 	
 	//comprobar que M es cuadrada
 	iniciar_matriz_cero(M);
-	for(int i = 0; i<M.fil; i++)
-		M.matriz[i][i] = (double) 1;
+	for(int i = 0; i < M->fil; i++)
+		M->matriz[i][i] = (double) 1;
 	
 	return;
 }
@@ -360,7 +383,7 @@ void op_sumar_fila(Matriz *M, int a, double k, int b){
 }
 
 // Intercambia las filas a y b
-void op_permutar_fila(Matriz *M, int a, int b){
+void op_permutar_fil(Matriz *M, int a, int b){
 	
 	double *temp; 
 	
@@ -368,6 +391,40 @@ void op_permutar_fila(Matriz *M, int a, int b){
 	M->matriz[a-1] = M->matriz[b-1];
 	M->matriz[b-1] = temp;
 	
+	return;
+}
+
+// Permutar por debajo de la diagonal
+void op_permutar_fil_L(Matriz *M, int a, int b){
+	
+	// Para comodidad, están ordenados.
+	if (b < a){
+		int tmp = a;
+		a = b;
+		b = tmp;
+	}
+	
+	// Recorro las columnas de la fila a
+	double temp; 
+	for (int j = 1; j < a; j++){
+		temp = M->matriz[a-1][j-1];
+		M->matriz[a-1][j-1] = M->matriz[b-1][j-1];
+		M->matriz[b-1][j-1] = temp;	
+	}
+	
+	return;
+}
+
+void op_permutar_col(Matriz *M, int a, int b){
+	
+	double temp; 
+	
+	for (int i = 0; i < M->fil; i++){
+		temp = M->matriz[i][a-1];
+		M->matriz[i][a-1] = M->matriz[i][b-1];
+		M->matriz[i][b-1] = temp;	
+	}
+
 	return;
 }
 
@@ -399,6 +456,8 @@ Matriz copiar_matriz(Matriz M){
 }
 
 /*
+	Descripción del algoritmo
+	
 	1_ Ver elemento a = M[i][j] (empezar con i = j = 1);
 	2_ Verificar si es distinto de cero o no.
 		2.1_ Es igual a 0
@@ -445,7 +504,7 @@ void triangular_matriz (Matriz *M, Vector_N *cambios){
 			while(coef_es_cero == true && i <= fil_max){
 				// Paso 2.3 Hallado el primer no nulo, permuto
 				if(fabs(M->matriz[i-1][col_idx-1]) > epsilon){
-					op_permutar_fila(M, fil_idx, i);
+					op_permutar_fil(M, fil_idx, i);
 					registrar_op_elemental(cambios, -1.0);
 					coef_es_cero = false; // sale del bucle y del bloque
 				}
@@ -480,6 +539,176 @@ void triangular_matriz (Matriz *M, Vector_N *cambios){
 	return;
 }
 
+// 14.12.25 versión modificada de triangular_matriz
+void triangular_matriz_Gauss (Matriz *M){
+	
+	int fil_max = M->fil;
+	int col_max = M->col;
+	
+	int fil_idx, col_idx; // 1-based
+	int i, j;
+	
+	bool coef_es_cero = false;
+	
+	double epsilon = 0.00001;
+	double aux = 0; // auxiliar
+	
+	// Este bucle explora cada fil. fil_idx es el índice de la fila.
+	// Paso 1
+	fil_idx = 1;
+	col_idx = 1;
+	while(fil_idx <= fil_max && col_idx <= col_max){
+		
+		// Paso 2
+		if( fabs(M->matriz[fil_idx-1][col_idx-1]) < epsilon){
+			
+			coef_es_cero = true;
+			
+			// Paso 2.2, busco debajo el primer no nulo debajo
+			i = fil_idx;
+			while(coef_es_cero == true && i <= fil_max){
+				// Paso 2.3 Hallado el primer no nulo, permuto
+				if(fabs(M->matriz[i-1][col_idx-1]) > epsilon){
+					op_permutar_fil(M, fil_idx, i);
+					coef_es_cero = false; // sale del bucle y del bloque
+				}
+				i++;
+			}
+			// Paso 2.2.1, No hay elemento debajo del coef que sea no nulo, avanzo de fila
+			if (coef_es_cero == true){
+				col_idx++;
+				continue;
+			}
+		}
+		
+		// Paso 3, elemento distinto de cero, normalizar la fila
+		aux = M->matriz[fil_idx-1][col_idx-1]; // Registro antes de cambiar
+		/*
+		op_normalizar_fila(M, fil_idx, col_idx);
+		*/
+		
+		// Paso 4, eliminar coeficientes en misma columna para cada fila debajo
+		if (fil_idx < fil_max){
+			for(i = fil_idx+1; i <= fil_max; i++){
+				op_sumar_fila(M, fil_idx, (-1.0) * M->matriz[i-1][col_idx-1] / aux, i);
+			}
+		}
+		
+		// Paso 5, Avanzo a la siguiente fila
+		fil_idx++;
+		col_idx++;
+	}
+	
+	return;
+}
+
+// 14.12.25 versión modificada de triangular_matriz
+// To-do: Pivotar con el elemento diagonal de mayor valor absoluto.
+/*
+	1_ Ver elemento a = U[i][j] (empezar con i = j = 1);
+	2_ Verificar si es distinto de cero o no.
+		2.1_ Es igual a 0
+		2.2_ Si la fila no es la última, buscar el primer elemento 
+		distinto de cero de la misma columna, en las filas inferiores.
+			2.2.1_ Si no hay distinto de cero, continuar en paso 5.
+		2.3_ Conseguido el índice, permutarlas. 
+		2.4_ Registrar el cambio en L, permutando filas y columnas bajo la diagonal. 
+		2.5_ Registrar el cambio en P, permutando filas.
+		2.6_ Continuar con el paso 3.
+	3_ Es != 0, continuar.
+	4_ Si no es la última, por cada fila inferior x, tomar el elemento b = M[x][j]
+		4.1_ A esa fila inferior x, restarle la fila i multiplicada por b/a
+		4.2_ Registrar el cambio en L.
+		4.3_ Repetir hasta la última fila 
+	5_ Si no es la última, avanzar a la siguiente fila 
+		5.1_ Si es la última fila, terminar programa.
+
+*/
+void obtener_P_L_U (Matriz *M, Matriz *P, Matriz *L, Matriz *U){
+	
+	// verificar que det es no nulo
+	
+	// si det es no nulo:
+	
+	int fil_max = M->fil;
+	int col_max = M->col;
+	
+	int fil_idx, col_idx; // 1-based
+	int i, j;
+	
+	
+	// blablabla
+	
+	*P = crear_matriz(fil_max, col_max);
+	*L = crear_matriz(fil_max, col_max);
+	*U = crear_matriz(fil_max, col_max);
+	
+	iniciar_matriz_identidad(P);
+	iniciar_matriz_identidad(L);
+	*U = copiar_matriz(*M);
+	
+	// vars aux
+	bool coef_es_cero = false;
+	
+	double epsilon = 0.00001;
+	double aux = 0; // auxiliar
+	
+	// Este bucle explora cada fil. fil_idx es el índice de la fila.
+	// Paso 1
+	fil_idx = 1;
+	col_idx = 1;
+	while(fil_idx <= fil_max && col_idx <= col_max){
+		
+		// Paso 2
+		if( fabs(U->matriz[fil_idx-1][col_idx-1]) < epsilon){
+			
+			coef_es_cero = true;
+			
+			// Paso 2.2, busco debajo el primer no nulo debajo
+			i = fil_idx;
+			while(coef_es_cero == true && i <= fil_max){
+				
+				// Paso 2.3 Hallado el primer no nulo, permuto luego registro.
+				if(fabs(U->matriz[i-1][col_idx-1]) > epsilon){
+					// Paso 2.4 registro P
+					op_permutar_col(P, fil_idx, i); // Se aplica primero la última permutación, luego la primera.
+													// Esto es, P_1···P_n-1 P_n, o lo que es lo mismo, permutar por
+													// derecha, o permutar columnas.
+					// Paso 2.5 registro L
+					op_permutar_fil_L(L, fil_idx, i); // Permuto las filas, sólo bajo la diagonal.
+					op_permutar_fil(U, fil_idx, i);
+					coef_es_cero = false; // sale del bucle y del bloque
+				}
+				i++;
+				
+			}
+			// Paso 2.2.1, No hay elemento debajo del coef que sea no nulo, avanzo de fila
+			if (coef_es_cero == true){
+				col_idx++;
+				continue;
+			}
+		}
+		
+		// Paso 3
+		
+		// Paso 4, eliminar coeficientes en misma columna para cada fila debajo
+		if (fil_idx < fil_max){
+			for(i = fil_idx+1; i <= fil_max; i++){
+				// si hay error este es el hijo de puta, no tengo ganas de pensar más que esto y ya
+				aux = U->matriz[i-1][col_idx-1] / U->matriz[fil_idx-1][col_idx-1]; // Registro antes de cambiar
+				L->matriz[i-1][fil_idx-1] += aux;
+				op_sumar_fila(U, fil_idx, (-1.0) * aux, i);
+			}
+		}
+		
+		// Paso 5, Avanzo a la siguiente fila
+		fil_idx++;
+		col_idx++;
+	}
+	
+	return;
+}
+
 void registrar_op_elemental(Vector_N *cambios, double valor){
 	// Aumento el tamaño
 	size_t len_nueva = cambios->len + 1;
@@ -492,25 +721,6 @@ void registrar_op_elemental(Vector_N *cambios, double valor){
 	cambios->vector = temp;
 	cambios->vector[len_nueva-1] = valor;
 	cambios->len = len_nueva;
-	
-	return;
-	
-}
-
-void imprimir_vector_N(Vector_N *vector){
-	
-	int len = vector->len;
-	
-	if(len == 0){
-		printf("No es un vector. \n");
-		return;
-	}	
-	
-	printf("( ");
-	for (int i = 0; i < len-1; i++){
-		printf("%8.4f, ", vector->vector[i]);
-	}
-	printf("%8.4f)\n",vector->vector[len-1]);
 	
 	return;
 	

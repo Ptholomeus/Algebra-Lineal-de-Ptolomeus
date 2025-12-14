@@ -27,7 +27,8 @@ void resolver() {
 	Matriz temp_1;
 	
 	// crear matriz de soluciones	
-	solucion = crear_matriz(M+1, 1); // vector columna
+		// 13.12.25 Despues de cambiar la definicion de mult escalar matriz, no necesito crearla.
+	//solucion = crear_matriz(M+1, 1); // vector columna
 	
 	// crear matriz de coeficientes
 	coeficientes = crear_matriz_coefs_1Dsteadystate(L, M);
@@ -63,8 +64,8 @@ void resolver() {
 	*/
 	
 	// crear matriz temporal, que almacena (1/k)*A^-1
-	temp_1 = crear_matriz(coeficientes.fil, coeficientes.col);
-	temp_1 = escalar_mult_matriz( (1/k) , inv_coefs );
+	// 13.12.25 Acá también podría haber problema, por eso cambio la def de esc mult matr
+	temp_1 = crear_escalar_mult_matriz( (1/k) , inv_coefs );
 	
 	// solucion es (1/k)*A^-1*b
 	solucion = crear_mult_matriz(temp_1, constantes);
@@ -87,8 +88,8 @@ void resolver() {
 	destruir_matriz(&inv_coefs);
 	destruir_matriz(&temp_1);
 	destruir_matriz(&sol_h);
-	destruir_matriz(&test);
-	free(vector.vector);
+	// destruir_matriz(&test);
+	// free(vector.vector);
 	
 	return;
 	

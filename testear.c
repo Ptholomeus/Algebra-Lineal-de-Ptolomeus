@@ -49,8 +49,6 @@ void test_matrices(){
 	
 	imprimir_matriz(probar);
 	
-	
-	
 	// detruyo todo lo creado
 	destruir_matriz(&M);
 	destruir_matriz(&M_menor);
@@ -89,7 +87,7 @@ void test_matrices_2(){
 	system("cls"); // A Brian y a Dennis no les gusta.
 	printf("Ingrese dimensiones \"m n\" de matriz m x n.\n");
 	scanf("%d %d", &fil, &col);
-	
+	getchar();	
 	
 	// Creo una matriz para probar
 	Matriz M, M_copia;
@@ -110,8 +108,10 @@ void test_matrices_2(){
 	Vector_N operaciones = {NULL, 0};
 	
 	// Para test de inversas 
-	Matriz M_inversa, test;
+	Matriz M_inversa, test_1;
 	
+	// Para test PLU
+	Matriz P, L, U, test_2;
 	
 	bool salir = false;
 	while(!salir){
@@ -130,82 +130,176 @@ void test_matrices_2(){
 		printf("4 Normalizar Fil_a \n");
 		printf("5 Eliminacion Gaussiana\n");
 		printf("6 Test de inversa\n");
-		printf("0 Salir \n");
+		printf("7 Permutar Col_a <-> Col_b \n");
+		printf("8 Test de PLU\n");
+		printf("0 Salir \n\n");
 		
 		printf("Elegir: \n");
 		fflush(stdout);
-		scanf("%d", &opt);		
+		
+		scanf("%d", &opt);
+		getchar();		
 		
 		switch (opt){
 			case 1:
-				printf("a k b : a*k -> b \n");
+			
+				printf("a k b : Fil_a*k -> Fil_b \n");
 				fflush(stdout);
+				
 				scanf("%d %lf %d", &a, &k, &b);
+				getchar();
+				
 				op_sumar_fila(&M_copia, a, k, b);
+				
+				printf("\n");
 				imprimir_matriz(M_copia);
+				
 				break;
 			
 			case 2:
-				printf("a b : a <-> b \n");
+			
+				printf("a b : Fil_a <-> Fil_b \n");
 				fflush(stdout);
+				
 				scanf("%d %d", &a, &b);
-				op_permutar_fila(&M_copia, a, b);
+				getchar();
+				
+				op_permutar_fil(&M_copia, a, b);
+				
+				printf("\n");
 				imprimir_matriz(M_copia);
+				
 				break;
 			
 			case 3:
-				printf("a k : a*k -> a \n");
+			
+				printf("a k : Fil_a*k -> Fil_a \n");
 				fflush(stdout);
+				
 				scanf("%d %lf", &a, &k);
+				getchar();
+				
 				op_fila_multiplicar(&M_copia, a, k);
+				
+				printf("\n");
 				imprimir_matriz(M_copia);
+				
 				break;
 			
 			case 4:
-				printf("a b: a* 1/M[a][b] -> a \n");
+			
+				printf("a b: Fil_a* 1/M[a][b] -> Fil_a \n");
 				fflush(stdout);
+				
 				scanf("%d %d", &a, &b);
+				getchar();
+				
 				op_normalizar_fila(&M_copia, a, b);
+				
+				printf("\n");
 				imprimir_matriz(M_copia);
+				
 				break;
 			
 			case 5 :
+			
 				fflush(stdout);
 				triangular_matriz (&M_copia, &operaciones);
+				
+				printf("\n");
 				imprimir_matriz(M_copia);
+				printf("\n");
 				imprimir_vector_N(&operaciones);
+				
 				free(operaciones.vector);
+				
 				break;
 				
 			case 6 :
+			
 				fflush(stdout);
 				M_inversa = crear_inversa(&M);
-				test = crear_mult_matriz(M, M_inversa);
+				test_1 = crear_mult_matriz(M, M_inversa);
+				
+				printf("\n");
 				printf("La inversa es: \n");
 				imprimir_matriz(M_inversa);
+				
+				printf("\n");
 				printf("M * M^-1: \n");
-				imprimir_matriz(test);				
+				imprimir_matriz(test_1);	
+				
+				destruir_matriz(&test_1);
+				destruir_matriz(&M_inversa);
+				
+				break;
+				
+			case 7:
+			
+				printf("a b : Col_a <-> Col_b \n");
+				fflush(stdout);
+				
+				scanf("%d %d", &a, &b);
+				getchar();
+				
+				op_permutar_col(&M_copia, a, b);
+				
+				printf("\n");
+				imprimir_matriz(M_copia);
+				
+				break;
+				
+			case 8 :
+			
+				fflush(stdout);
+				
+				obtener_P_L_U (&M, &P, &L, &U);
+				
+				test_1 = crear_mult_matriz(P, L);
+				test_2 = crear_mult_matriz(test_1, U);
+				
+				printf("\n");				
+				printf("La matriz P es: \n");
+				imprimir_matriz(P);
+				
+				printf("\n");
+				printf("La matriz L es: \n");
+				imprimir_matriz(L);
+				
+				printf("\n");
+				printf("La matriz U es: \n");
+				imprimir_matriz(U);
+				
+				printf("\n");
+				printf("La matriz PLU es: \n");
+				imprimir_matriz(test_2);
+				
+				printf("\n");
+				printf("La matriz M es: \n");
+				imprimir_matriz(M);
+
+				destruir_matriz(&test_1);
+				destruir_matriz(&test_2);
 				
 				break;
 			
 			case 0:
+			
 				salir = true;
+				
 				break;
 				
 			default:
 				//tamal
 				break;
 		}
-		
-		// Averiguar qué pasa acá
-		getchar();
+			
+		printf("Presione cualquier tecla... \n");		
 		getchar();
 		
 		
 	}
 	
-	destruir_matriz(&M_inversa);
-	destruir_matriz(&test);
 	destruir_matriz(&M);
 	destruir_matriz(&M_copia);
 	
