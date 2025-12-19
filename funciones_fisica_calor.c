@@ -64,3 +64,44 @@ Matriz crear_matriz_const_1Dsteadystate (int M){
 	return constante;
 	
 }
+
+Matriz crear_matriz_coefs_1DSimpleTransient(double L, int M, double t, int N){
+	
+	// para practicar
+	alfa = 1.0;
+	
+	double Dx = L / (double) M;
+	double Dt = t / (double) N;
+	double r  = alfa * Dt / (Dx * Dx);
+
+	Matriz coefs;
+	coefs = crear_matriz(M+1, M+1);
+	
+	//Inicializar matriz
+	
+	coefs.matriz[0][0] = r;
+	coefs.matriz[M][M] = r;
+	
+	for (int i = 1; i < M; i++){
+		coefs.matriz[i][i-1] = r;
+		coefs.matriz[i][i+0] = 1.0 - 2.0 * r;
+		coefs.matriz[i][i+1] = r;
+	}
+		
+	return coefs;
+	
+}
+
+// verificar que coincidan las matrices
+void acumular_soluciones(Matriz *M, Matriz *M_col){
+	
+	static int indice = 0;
+	
+	for(int i = 0; i < M->fil; i++){
+		M->matriz[i][indice] = M_col->matriz[i][0];
+	}
+	
+	indice++;
+	
+	return;
+}

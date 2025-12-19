@@ -42,4 +42,4 @@ Matriz crear_fwd_subs(Matriz *L, Matriz *Pb);
 Matriz crear_bwd_subs(Matriz *U, Matriz *y);
 void suma_matrices (Matriz *A, Matriz *B, Matriz *C);
 void resta_matrices (Matriz *A, Matriz *B, Matriz *C);
-void resolver_sistema(Matriz *x, Matriz *A, Matriz *b);
+void crear_solucion_sistema(Matriz *x, Matriz *A, Matriz *b);

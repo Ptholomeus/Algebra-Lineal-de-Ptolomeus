@@ -78,7 +78,7 @@ void resolver() {
 	*/
 	
 	temp_1 = crear_escalar_mult_matriz( (1/k) , constantes);
-	resolver_sistema(&solucion, &coeficientes, &temp_1);
+	crear_solucion_sistema(&solucion, &coeficientes, &temp_1);
 	
 	// solucion horizontal
 	Matriz sol_h;

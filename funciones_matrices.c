@@ -13,10 +13,11 @@
 	
 	To-Do:
 	
-	- Verificar que los argumentos sean correctos
+	- Verificar que los argumentos sean correctos (hacer código seguro)
 	- Forward y backward substitution
 	- Pasar argumentos como punteros en lo que haga falta
 	- Calcular autovalores (necesito un solver de polinomios)
+	- Buscar y eliminar todo número mágico
 	
 	To-Do long:
 	
@@ -694,11 +695,14 @@ void obtener_P_L_U (Matriz *M, Matriz *P, Matriz *L, Matriz *U){
 				if(fabs(U->matriz[i-1][col_idx-1]) > epsilon){
 					coef_es_cero = false; // sale del bucle y del bloque
 					// Paso 2.4 registro P
-					op_permutar_fil(P, fil_idx, i); // Se aplica primero la última permutación, luego la primera.
+					// modf: Lo guardo para usarlo en b directamente
+					op_permutar_fil(P, fil_idx, i); 
+				  //op_permutar_col(P, fil_idx, i); // Se aplica primero la última permutación, luego la primera.
 													// Esto es, P_1···P_n-1 P_n, o lo que es lo mismo, permutar por
 													// derecha, o permutar columnas.
 					// Paso 2.5 registro L
 					op_permutar_fil_L(L, fil_idx, i); // Permuto las filas, sólo bajo la diagonal.
+													  // Nota a myselve: No entiendo por qué esto funciona!!!
 					op_permutar_fil(U, fil_idx, i);
 				}
 				i++;
@@ -834,7 +838,7 @@ void resta_matrices (Matriz *A, Matriz *B, Matriz *C){
 	return;
 }
 
-void resolver_sistema(Matriz *x, Matriz *A, Matriz *b){
+void crear_solucion_sistema(Matriz *x, Matriz *A, Matriz *b){
 	
 	Matriz P, L, U, y, Pb;
 	
@@ -851,4 +855,5 @@ void resolver_sistema(Matriz *x, Matriz *A, Matriz *b){
 	destruir_matriz(&y);
 	
 	return;
+	
 }

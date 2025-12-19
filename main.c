@@ -12,6 +12,7 @@ git branch branch_name       (rama)
 git remote add origin link   (subir a github)
 git push                     (subir cambio)
 git restore .                (restaurar)
+git reset --hard             (borra cambios y lleva a la última versión)
 */
 
 /*
@@ -31,8 +32,6 @@ printf("Presione Enter para salir...");
 getchar();
 
 */
-
-
 
 #include <stdlib.h>
 #include <stdio.h>
